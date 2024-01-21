@@ -74,7 +74,38 @@ def query_sql_database(channel_name):
     cursor = conn.cursor()
 
     # Execute SQL query to retrieve data
-    cursor.execute(f"SELECT * FROM channel WHERE channel_name = '{channel_name}'")
+    
+    
+    st.write(f"Names of all the videos and their corresponding channels:")
+    cursor.execute(f"SELECT v.video_name, c.channel_name FROM video v JOIN playlist p ON v.playlist_id = p.playlist_id JOIN channel c ON p.channel_id = c.channel_id;")
+   
+   st.write(f"Channels with most number of videos and it's count")
+    cursor.execute(f"SELECT c.channel_name, COUNT(v.video_id) AS video_count FROM channel c JOIN playlist p ON c.channel_id = p.channel_id JOIN video v ON p.playlist_id = v.playlist_id GROUP BY c.channel_name ORDER BY video_count DESC LIMIT 1;")
+   
+   st.write(f"Top 10 most viewed videos and their corresponding channels")
+    cursor.execute(f"SELECT v.video_name, c.channel_name, v.view_count FROM video v JOIN playlist p ON v.playlist_id = p.playlist_id JOIN channel c ON p.channel_id = c.channel_id ORDER BY v.view_count DESC LIMIT 10;")
+   
+   st.write(f"Number of comments on each video and their corresponding video names")
+    cursor.execute(f"SELECT v.video_name, COUNT(c.comment_id) AS comment_count FROM video v LEFT JOIN comment c ON v.video_id = c.video_id GROUP BY v.video_name;")
+    
+    st.write(f"Videos with highest numebr of likes and their corresponding channel name")
+    cursor.execute(f"SELECT v.video_name, c.channel_name, v.like_count FROM video v JOIN playlist p ON v.playlist_id = p.playlist_id JOIN channel c ON p.channel_id = c.channel_id ORDER BY v.like_count DESC LIMIT 1;")
+    
+    st.write(f"Total number of likes and dislikes on each video and their corresponding video names")
+    cursor.execute(f"SELECT v.video_name, SUM(v.like_count) AS total_likes, SUM(v.dislike_count) AS total_dislikes FROM video v GROUP BY v.video_name;")
+    
+    st.write(f"Total number of views on each channels and their corresponding channel names")
+    cursor.execute(f"SELECT c.channel_name, SUM(v.view_count) AS total_views FROM channel c JOIN playlist p ON c.channel_id = p.channel_id JOIN video v ON p.playlist_id = v.playlist_id GROUP BY c.channel_name;")
+    
+    st.write(f"Number of all channels that have published video in the year 2022")
+    cursor.execute(f"SELECT DISTINCT c.channel_name FROM channel c JOIN playlist p ON c.channel_id = p.channel_id JOIN video v ON p.playlist_id = v.playlist_id WHERE YEAR(v.published_date) = 2022;")
+    
+    st.write(f"Average duration of all videos in each channel and their corresponding channel names:")
+    cursor.execute(f"SELECT c.channel_name, AVG(v.duration) AS average_duration FROM channel c JOIN playlist p ON c.channel_id = p.channel_id JOIN video v ON p.playlist_id = v.playlist_id GROUP BY c.channel_name;")
+    
+    st.write(f"Videos with the highest number of comments and their corresponding channel names:")
+    cursor.execute(f"SELECT v.video_name, c.channel_name, COUNT(com.comment_id) AS comment_count FROM video v JOIN playlist p ON v.playlist_id = p.playlist_id JOIN channel c ON p.channel_id = c.channel_id LEFT JOIN comment com ON v.video_id = com.video_id GROUP BY v.video_name, c.channel_name ORDER BY comment_count DESC LIMIT 1;")
+   
     result = cursor.fetchall()
 
     cursor.close()
